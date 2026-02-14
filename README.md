@@ -1,78 +1,84 @@
 # Spam Email Detection using Machine Learning
 
+A production-style machine learning project that classifies emails as **spam** or **ham** with reusable training, prediction, and evaluation workflows.
+
 ## Problem Statement
-Email spam is a major cybersecurity and productivity issue. The goal of this project is to build a machine learning model that can automatically classify incoming emails as **spam** or **ham** (not spam), reducing manual filtering effort.
+Spam emails create security and productivity risks. This project builds a reliable classifier that can detect spam automatically and provide evaluation artifacts for model quality tracking.
 
-## Dataset Description
-The project expects a CSV dataset in `dataset/sample_emails.csv` with the following columns:
-- `email`: email text content
-- `label`: target class (`spam` or `ham`)
+## Project Architecture (Text Diagram)
+```text
+CLI (spam_email_detection_project.py)
+        |
+        v
+src/train.py   src/predict.py   src/evaluate.py
+        \        |             /
+         \       |            /
+              src/spam_pipeline.py
+                    |
+      +-------------+----------------+
+      |                              |
+ data/sample_emails.csv         models/spam_model.joblib
+                                      |
+                                      v
+                        reports/evaluation.txt
+                        reports/confusion_matrix.png
+```
 
-A sample dataset file is included for quick testing.
+## Repository Structure
+```text
+spam-email-detection/
+    data/
+    models/
+    src/
+    reports/
+    notebooks/
+    README.md
+    requirements.txt
+```
 
-## Technologies Used
-- Python
-- pandas
-- numpy
-- scikit-learn
-- matplotlib
-- seaborn
-- nltk
+## Skills Demonstrated
+- Data loading and validation
+- Text preprocessing with TF-IDF pipeline
+- Model training and optional model comparison
+- Metrics reporting (precision, recall, F1-score)
+- Confusion matrix visualization
+- Error handling and structured logging
+- CLI-based reproducible ML workflow
 
-## Model Used
-This project supports two machine learning models:
+## Models
 - Naive Bayes (`naive_bayes`)
 - Logistic Regression (`logistic_regression`)
 
-The text is transformed using TF-IDF vectorization before classification.
+Use `--compare-models` to automatically train both and save the best one by F1-score.
 
-## Project Structure
-```text
-spam-email-detection/
-|- dataset/
-|  |- sample_emails.csv
-|- notebook/
-|  |- .gitkeep
-|- src/
-|  |- spam_detector.py
-|- model/
-|  |- .gitkeep
-|  |- spam_model.pkl
-|- README.md
-|- requirements.txt
-|- spam_email_detection_project.py
-```
-
-## Steps to Run the Project
-1. Create and activate a virtual environment.
+## Example CLI Usage
+1. Train a single model:
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
+py spam_email_detection_project.py train --model-type logistic_regression
 ```
 
-2. Install dependencies.
+2. Compare models and save the best:
 ```powershell
-pip install -r requirements.txt
+py spam_email_detection_project.py train --compare-models
 ```
 
-3. Train the model.
+3. Predict one email:
 ```powershell
-py spam_email_detection_project.py train --data dataset/sample_emails.csv --model-out model/spam_model.pkl --model-type naive_bayes
+py spam_email_detection_project.py predict --text "URGENT: Verify your account now"
 ```
 
-4. Predict a new email.
+4. Evaluate and generate reports:
 ```powershell
-py spam_email_detection_project.py predict --model model/spam_model.pkl --text "Congratulations! You have won a free gift card. Click now!"
+py spam_email_detection_project.py evaluate
 ```
 
-## Example Output
-```text
-Prediction: spam
-```
+## Generated Evaluation Outputs
+- `reports/evaluation.txt`
+- `reports/confusion_matrix.png`
 
 ## Future Improvements
-- Add advanced NLP preprocessing (lemmatization, stopword tuning, n-gram optimization).
-- Add hyperparameter tuning and cross-validation.
-- Build a simple web app interface (Flask/FastAPI).
-- Add model performance plots using matplotlib/seaborn.
-- Expand dataset for better real-world generalization.
+- Hyperparameter optimization with cross-validation
+- Larger and more diverse dataset
+- Experiment tracking (MLflow)
+- REST API deployment with FastAPI
+- Continuous model monitoring for drift

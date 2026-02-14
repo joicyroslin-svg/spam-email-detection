@@ -1,67 +1,54 @@
+from __future__ import annotations
+
 import argparse
+import logging
 from pathlib import Path
 
-import joblib
-import numpy as np
-import pandas as pd
+from src.spam_pipeline import (
+    configure_logging,
+    evaluate_model,
+    load_data,
+    load_model,
+    resolve_data_path,
+)
+
+logger = logging.getLogger(__name__)
 
 
-def top_tfidf_terms_for_input(model, text: str, top_k: int = 8):
-    pre = model.named_steps["preprocessor"]
-    clf = model.named_steps["classifier"]
+def run_evaluation(model_path: Path, data_path: Path, reports_dir: Path) -> None:
+    """Evaluate a trained model on dataset split and save reports."""
+    model = load_model(model_path)
+    data = load_data(resolve_data_path(data_path))
 
-    vec = pre.named_transformers_["text"]
-    feature_names = vec.get_feature_names_out()
-    text_vector = vec.transform([text])
+    # Use deterministic split from training helper by reusing train_test_split semantics.
+    X = data["email"]
+    y = data["label"]
 
-    if not hasattr(clf, "coef_"):
-        return []
+    from sklearn.model_selection import train_test_split
 
-    coef = clf.coef_.ravel()[: len(feature_names)]
-    scores = text_vector.multiply(coef).toarray().ravel()
-    if not np.any(scores):
-        return []
+    _, X_test, _, y_test = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
+    metrics = evaluate_model(model, X_test, y_test, reports_dir=reports_dir)
 
-    top_idx = np.argsort(scores)[::-1][:top_k]
-    terms = []
-    for idx in top_idx:
-        if scores[idx] <= 0:
-            continue
-        terms.append((feature_names[idx], float(scores[idx])))
-    return terms
+    logger.info("Precision: %.4f | Recall: %.4f | F1-score: %.4f", metrics["precision"], metrics["recall"], metrics["f1"])
+    logger.info("Evaluation report saved at: %s", metrics["evaluation_path"])
+    logger.info("Confusion matrix image saved at: %s", metrics["confusion_matrix_path"])
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Evaluate a text and show explainability signals.")
+def main() -> None:
+    """CLI entry point for model evaluation."""
+    parser = argparse.ArgumentParser(description="Evaluate spam detection model")
     parser.add_argument("--model", type=Path, default=Path("models/spam_model.joblib"), help="Path to trained model")
-    parser.add_argument("--text", type=str, required=True, help="Email text to analyze")
+    parser.add_argument("--data", type=Path, default=Path("data/sample_emails.csv"), help="Path to dataset")
+    parser.add_argument("--reports-dir", type=Path, default=Path("reports"), help="Output directory for reports")
     args = parser.parse_args()
 
-    model = joblib.load(args.model)
-    sample = pd.DataFrame({"email": [args.text]})
+    configure_logging()
 
-    pred = int(model.predict(sample)[0])
-    label = "spam" if pred == 1 else "ham"
-
-    if hasattr(model, "decision_function"):
-        margin = float(model.decision_function(sample)[0])
-        confidence = 1.0 / (1.0 + np.exp(-margin))
-    elif hasattr(model, "predict_proba"):
-        confidence = float(model.predict_proba(sample)[0][1])
-    else:
-        confidence = None
-
-    print(f"Prediction: {label}")
-    if confidence is not None:
-        print(f"Spam confidence: {confidence:.4f}")
-
-    terms = top_tfidf_terms_for_input(model, args.text)
-    print("Top influential spam terms:")
-    if not terms:
-        print("  (No strong spam term contribution found)")
-    else:
-        for term, score in terms:
-            print(f"  - {term}: {score:.4f}")
+    try:
+        run_evaluation(args.model, args.data, args.reports_dir)
+    except (FileNotFoundError, ValueError) as exc:
+        logger.error("Evaluation failed: %s", exc)
+        raise SystemExit(1) from exc
 
 
 if __name__ == "__main__":

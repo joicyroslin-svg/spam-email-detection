@@ -1,79 +1,103 @@
 from __future__ import annotations
 
 import argparse
-import pickle
+import logging
 from pathlib import Path
 
-from src.spam_detector import evaluate_model, load_data, predict_email, train_model
+from src.spam_pipeline import (
+    compare_models,
+    configure_logging,
+    evaluate_model,
+    load_data,
+    load_model,
+    predict_email,
+    resolve_data_path,
+    save_model,
+    train_model,
+)
 
-DEFAULT_DATASET = Path("dataset/sample_emails.csv")
-DEFAULT_MODEL = Path("model/spam_model.pkl")
+logger = logging.getLogger(__name__)
 
 
-def run_train(data_path: Path, model_path: Path, model_type: str) -> None:
-    """Train the model, evaluate it, and save it to disk."""
-    # Load and validate dataset.
-    data = load_data(data_path)
+def run_train(data_path: Path, model_path: Path, model_type: str, compare: bool) -> None:
+    """Train model(s), optionally compare, and save best model."""
+    data = load_data(resolve_data_path(data_path))
 
-    # Train selected model and get test split for evaluation.
-    model, X_test, y_test = train_model(data, model_type=model_type)
+    if compare:
+        model, best_name, X_test, y_test, metrics = compare_models(data)
+        logger.info("Best model selected by comparison: %s", best_name)
+    else:
+        model, X_test, y_test, metrics = train_model(data, model_type=model_type)
 
-    # Evaluate trained model.
-    metrics = evaluate_model(model, X_test, y_test)
-    print(f"Accuracy: {metrics['accuracy']:.4f}")
-    print("Classification Report:")
-    print(metrics["classification_report"])
-    print("Confusion Matrix:")
-    print(metrics["confusion_matrix"])
+    save_model(model, model_path)
+    eval_metrics = evaluate_model(model, X_test, y_test, reports_dir=Path("reports"))
 
-    # Save trained model.
-    model_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(model_path, "wb") as f:
-        pickle.dump(model, f)
-    print(f"Model saved to: {model_path}")
+    logger.info("Precision: %.4f | Recall: %.4f | F1-score: %.4f", eval_metrics["precision"], eval_metrics["recall"], eval_metrics["f1"])
+    logger.info("Classification report:\n%s", metrics["classification_report"])
 
 
 def run_predict(model_path: Path, text: str) -> None:
-    """Load saved model and predict a single email."""
-    with open(model_path, "rb") as f:
-        model = pickle.load(f)
+    """Load model and run a single prediction."""
+    model = load_model(model_path)
+    result = predict_email(model, text)
+    logger.info("Prediction: %s", result["label"])
+    if result["confidence"] is not None:
+        logger.info("Spam confidence: %.4f", result["confidence"])
 
-    label = predict_email(model, text)
-    print(f"Prediction: {label}")
+
+def run_evaluate(model_path: Path, data_path: Path) -> None:
+    """Evaluate saved model and write reports."""
+    model = load_model(model_path)
+    data = load_data(resolve_data_path(data_path))
+
+    from sklearn.model_selection import train_test_split
+
+    X = data["email"]
+    y = data["label"]
+    _, X_test, _, y_test = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
+    metrics = evaluate_model(model, X_test, y_test, reports_dir=Path("reports"))
+
+    logger.info("Precision: %.4f | Recall: %.4f | F1-score: %.4f", metrics["precision"], metrics["recall"], metrics["f1"])
 
 
 def main() -> None:
+    """CLI entry point for train, predict, and evaluate commands."""
     parser = argparse.ArgumentParser(description="Spam Email Detection using Machine Learning")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    train_parser = subparsers.add_parser("train", help="Train and save a spam detection model")
-    train_parser.add_argument("--data", type=Path, default=DEFAULT_DATASET)
-    train_parser.add_argument("--model-out", type=Path, default=DEFAULT_MODEL)
+    train_parser = subparsers.add_parser("train", help="Train and save spam model")
+    train_parser.add_argument("--data", type=Path, default=Path("data/sample_emails.csv"))
+    train_parser.add_argument("--model-out", type=Path, default=Path("models/spam_model.joblib"))
     train_parser.add_argument(
         "--model-type",
         type=str,
-        default="naive_bayes",
+        default="logistic_regression",
         choices=["naive_bayes", "logistic_regression"],
-        help="Choose model type",
     )
+    train_parser.add_argument("--compare-models", action="store_true", help="Compare Naive Bayes and Logistic Regression")
 
-    predict_parser = subparsers.add_parser("predict", help="Predict spam/ham for email text")
-    predict_parser.add_argument("--model", type=Path, default=DEFAULT_MODEL)
+    predict_parser = subparsers.add_parser("predict", help="Predict spam/ham for one email")
+    predict_parser.add_argument("--model", type=Path, default=Path("models/spam_model.joblib"))
     predict_parser.add_argument("--text", type=str, required=True)
 
-    args = parser.parse_args()
+    evaluate_parser = subparsers.add_parser("evaluate", help="Evaluate model and save reports")
+    evaluate_parser.add_argument("--model", type=Path, default=Path("models/spam_model.joblib"))
+    evaluate_parser.add_argument("--data", type=Path, default=Path("data/sample_emails.csv"))
 
-    if args.command == "train":
-        run_train(args.data, args.model_out, args.model_type)
-    elif args.command == "predict":
-        run_predict(args.model, args.text)
+    args = parser.parse_args()
+    configure_logging()
+
+    try:
+        if args.command == "train":
+            run_train(args.data, args.model_out, args.model_type, args.compare_models)
+        elif args.command == "predict":
+            run_predict(args.model, args.text)
+        elif args.command == "evaluate":
+            run_evaluate(args.model, args.data)
+    except (FileNotFoundError, ValueError, RuntimeError) as exc:
+        logger.error("Command failed: %s", exc)
+        raise SystemExit(1) from exc
 
 
 if __name__ == "__main__":
     main()
-
-    # Example prediction code:
-    # 1) Train first:
-    #    py spam_email_detection_project.py train --model-type logistic_regression
-    # 2) Predict:
-    #    py spam_email_detection_project.py predict --text "Congratulations! You won a free iPhone. Click now!"

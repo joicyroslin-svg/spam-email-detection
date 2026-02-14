@@ -5,8 +5,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SCRIPT = ROOT / "spam_email_detection_project.py"
-DATA = ROOT / "dataset" / "sample_emails.csv"
-MODEL = ROOT / "model" / "spam_model.pkl"
+DATA = ROOT / "data" / "sample_emails.csv"
+MODEL = ROOT / "models" / "spam_model.joblib"
+REPORT = ROOT / "reports" / "evaluation.txt"
 
 
 def run_cmd(args):
@@ -19,6 +20,10 @@ def run_cmd(args):
     )
 
 
+def combined_output(result):
+    return (result.stdout or "") + (result.stderr or "")
+
+
 def test_train_creates_model():
     result = run_cmd([
         "train",
@@ -29,7 +34,8 @@ def test_train_creates_model():
         "--model-type",
         "naive_bayes",
     ])
-    assert "Model saved to" in result.stdout
+    output = combined_output(result)
+    assert "Saved model" in output
     assert MODEL.exists()
 
 
@@ -43,4 +49,10 @@ def test_predict_outputs_label():
             "You won a free gift card, click now.",
         ]
     )
-    assert "Prediction:" in result.stdout
+    output = combined_output(result)
+    assert "Prediction:" in output
+
+
+def test_evaluate_writes_report():
+    run_cmd(["evaluate", "--model", str(MODEL), "--data", str(DATA)])
+    assert REPORT.exists()
