@@ -1,104 +1,78 @@
-# Spam Email Detection
-[![CI](https://github.com/joicyroslin-svg/spam-email-detection/actions/workflows/ci.yml/badge.svg)](https://github.com/joicyroslin-svg/spam-email-detection/actions/workflows/ci.yml)
+# Spam Email Detection using Machine Learning
 
-An end-to-end, GitHub-ready AI project for detecting spam emails with a practical, explainable workflow.
+## Problem Statement
+Email spam is a major cybersecurity and productivity issue. The goal of this project is to build a machine learning model that can automatically classify incoming emails as **spam** or **ham** (not spam), reducing manual filtering effort.
 
-## About
+## Dataset Description
+The project expects a CSV dataset in `dataset/sample_emails.csv` with the following columns:
+- `email`: email text content
+- `label`: target class (`spam` or `ham`)
 
-This project uses a hybrid AI + rule-based approach to classify emails as spam or ham.
-It combines TF-IDF text features, handcrafted spam indicators, and phishing-risk signal analysis to provide:
+A sample dataset file is included for quick testing.
 
-- Spam/ham prediction
-- Confidence score
-- Explainable top spam terms
-- Risk-score based safety action
+## Technologies Used
+- Python
+- pandas
+- numpy
+- scikit-learn
+- matplotlib
+- seaborn
+- nltk
 
-## What makes this unique
+## Model Used
+This project supports two machine learning models:
+- Naive Bayes (`naive_bayes`)
+- Logistic Regression (`logistic_regression`)
 
-- Hybrid features: combines classic text TF-IDF features with handcrafted email risk signals.
-- Explainability-first: shows the top words/signals influencing each prediction.
-- Real-world style split: includes confidence score and easy model comparison.
-- Portfolio-ready structure: clean scripts, reproducible steps, and sample dataset.
+The text is transformed using TF-IDF vectorization before classification.
 
 ## Project Structure
-
 ```text
 spam-email-detection/
-+- data/
-|  +- sample_emails.csv
-+- models/
-|  +- .gitkeep
-|  +- spam_model.joblib
-+- src/
-|  +- train.py
-|  +- predict.py
-|  +- evaluate.py
-+- requirements.txt
-+- .gitignore
-+- LICENSE
-+- README.md
-+- demo.txt
-+- spam_email_detection_project.py
-+- test_project.py
+|- dataset/
+|  |- sample_emails.csv
+|- notebook/
+|  |- .gitkeep
+|- src/
+|  |- spam_detector.py
+|- model/
+|  |- .gitkeep
+|  |- spam_model.pkl
+|- README.md
+|- requirements.txt
+|- spam_email_detection_project.py
 ```
 
-## Setup
-
+## Steps to Run the Project
+1. Create and activate a virtual environment.
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\activate
-py -m pip install -r requirements.txt
 ```
 
-## Train
-
+2. Install dependencies.
 ```powershell
-py spam_email_detection_project.py train --data data/sample_emails.csv --model-out models/spam_model.joblib
+pip install -r requirements.txt
 ```
 
-## Predict
-
+3. Train the model.
 ```powershell
-py spam_email_detection_project.py predict --model models/spam_model.joblib --text "Congratulations! You won a free iPhone. Click now!"
+py spam_email_detection_project.py train --data dataset/sample_emails.csv --model-out model/spam_model.pkl --model-type naive_bayes
 ```
 
-## Evaluate with Explainability
-
+4. Predict a new email.
 ```powershell
-py spam_email_detection_project.py explain --model models/spam_model.joblib --text "Urgent: Your account is locked, verify immediately"
+py spam_email_detection_project.py predict --model model/spam_model.pkl --text "Congratulations! You have won a free gift card. Click now!"
 ```
 
-## Analyze with Risk Signals
-
-```powershell
-py spam_email_detection_project.py analyze --model models/spam_model.joblib --text "URGENT: Verify OTP now to avoid account suspension."
-```
-
-## Sample Output
-
+## Example Output
 ```text
 Prediction: spam
-Spam confidence: 0.8681
-Rule-based risk score: 65/100
-Matched risk signals:
-  - credential_theft: otp
-  - urgent_pressure: 24 hours, suspended, termination, urgent
-  - suspicious_link_language: click now
-Action: Move to spam/quarantine and avoid clicking links.
 ```
 
-## Demo Cases
-
-Use `demo.txt` for quick manual checks with expected labels.
-
-## Tests
-
-```powershell
-py -m pytest test_project.py
-```
-
-## Future Upgrades
-
-- Add FastAPI + web UI
-- Use larger public dataset (e.g., SMS Spam Collection)
-- Add CI tests and model drift monitoring
+## Future Improvements
+- Add advanced NLP preprocessing (lemmatization, stopword tuning, n-gram optimization).
+- Add hyperparameter tuning and cross-validation.
+- Build a simple web app interface (Flask/FastAPI).
+- Add model performance plots using matplotlib/seaborn.
+- Expand dataset for better real-world generalization.
