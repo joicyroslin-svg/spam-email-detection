@@ -56,3 +56,20 @@ def test_predict_outputs_label():
 def test_evaluate_writes_report():
     run_cmd(["evaluate", "--model", str(MODEL), "--data", str(DATA)])
     assert REPORT.exists()
+
+
+def test_train_with_cv_flag():
+    result = run_cmd(
+        [
+            "train",
+            "--data",
+            str(DATA),
+            "--model-out",
+            str(MODEL),
+            "--compare-models",
+            "--cv-folds",
+            "3",
+        ]
+    )
+    output = combined_output(result)
+    assert "Cross-validation summary" in output

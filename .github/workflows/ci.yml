@@ -27,3 +27,9 @@ jobs:
       - name: Run tests
         run: |
           pytest test_project.py
+
+      - name: CLI smoke test
+        run: |
+          python spam_email_detection_project.py train --data data/sample_emails.csv --model-out models/spam_model.joblib --compare-models --cv-folds 3
+          python spam_email_detection_project.py predict --model models/spam_model.joblib --text "URGENT: Verify account now to avoid suspension."
+          python spam_email_detection_project.py evaluate --model models/spam_model.joblib --data data/sample_emails.csv

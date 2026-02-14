@@ -51,6 +51,7 @@ spam-email-detection/
 - Logistic Regression (`logistic_regression`)
 
 Use `--compare-models` to automatically train both and save the best one by F1-score.
+Use `--cv-folds` to run optional cross-validation before final training.
 
 ## Example CLI Usage
 1. Train a single model:
@@ -61,6 +62,11 @@ py spam_email_detection_project.py train --model-type logistic_regression
 2. Compare models and save the best:
 ```powershell
 py spam_email_detection_project.py train --compare-models
+```
+
+2.1. Compare models with cross-validation:
+```powershell
+py spam_email_detection_project.py train --compare-models --cv-folds 5
 ```
 
 3. Predict one email:
@@ -76,6 +82,7 @@ py spam_email_detection_project.py evaluate
 ## Generated Evaluation Outputs
 - `reports/evaluation.txt`
 - `reports/confusion_matrix.png`
+- `screenshots/sample_output_real.png`
 
 ## Model Evaluation Metrics
 Training and evaluation now report the following metrics:
@@ -87,7 +94,7 @@ Training and evaluation now report the following metrics:
 These metrics are logged in terminal output and written to `reports/evaluation.txt` after evaluation.
 
 ## Future Improvements
-- Hyperparameter optimization with cross-validation
+- Hyperparameter optimization with grid/random search
 - Larger and more diverse dataset
 - Experiment tracking (MLflow)
 - REST API deployment with FastAPI

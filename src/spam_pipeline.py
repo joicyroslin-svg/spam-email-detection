@@ -11,8 +11,8 @@ import pandas as pd
 import seaborn as sns
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_recall_fscore_support
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, make_scorer, precision_recall_fscore_support, f1_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 
@@ -161,6 +161,36 @@ def compare_models(
 
     logger.info("Best model selected: %s (F1=%.4f)", best_name, best_metrics["f1"])
     return best_model, best_name, best_X_test, best_y_test, best_metrics
+
+
+def cross_validate_models(
+    data: pd.DataFrame,
+    candidates: Tuple[str, ...] = ("naive_bayes", "logistic_regression"),
+    cv_folds: int = 5,
+    random_state: int = 42,
+) -> Dict[str, Dict[str, float]]:
+    """Run cross-validation for candidate models and return F1 summary stats."""
+    X = data["email"]
+    y = data["label"]
+    scorer = make_scorer(f1_score, pos_label="spam")
+    splitter = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_state)
+    summary: Dict[str, Dict[str, float]] = {}
+
+    for model_name in candidates:
+        model = build_pipeline(model_name)
+        scores = cross_val_score(model, X, y, cv=splitter, scoring=scorer)
+        summary[model_name] = {
+            "cv_f1_mean": float(scores.mean()),
+            "cv_f1_std": float(scores.std()),
+        }
+        logger.info(
+            "CV %s | mean F1=%.4f | std=%.4f",
+            model_name,
+            summary[model_name]["cv_f1_mean"],
+            summary[model_name]["cv_f1_std"],
+        )
+
+    return summary
 
 
 def save_model(model: Pipeline, model_path: Path | str) -> Path:

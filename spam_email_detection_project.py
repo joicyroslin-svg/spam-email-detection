@@ -7,6 +7,7 @@ from pathlib import Path
 from src.spam_pipeline import (
     compare_models,
     configure_logging,
+    cross_validate_models,
     evaluate_model,
     load_data,
     load_model,
@@ -19,9 +20,14 @@ from src.spam_pipeline import (
 logger = logging.getLogger(__name__)
 
 
-def run_train(data_path: Path, model_path: Path, model_type: str, compare: bool) -> None:
+def run_train(data_path: Path, model_path: Path, model_type: str, compare: bool, cv_folds: int) -> None:
     """Train model(s), optionally compare, and save best model."""
     data = load_data(resolve_data_path(data_path))
+
+    if cv_folds > 1:
+        cv_summary = cross_validate_models(data, cv_folds=cv_folds)
+        for name, stats in cv_summary.items():
+            logger.info("Cross-validation summary | %s | mean_f1=%.4f | std=%.4f", name, stats["cv_f1_mean"], stats["cv_f1_std"])
 
     if compare:
         model, best_name, X_test, y_test, metrics = compare_models(data)
@@ -75,6 +81,7 @@ def main() -> None:
         choices=["naive_bayes", "logistic_regression"],
     )
     train_parser.add_argument("--compare-models", action="store_true", help="Compare Naive Bayes and Logistic Regression")
+    train_parser.add_argument("--cv-folds", type=int, default=0, help="Optional cross-validation folds (0 disables CV)")
 
     predict_parser = subparsers.add_parser("predict", help="Predict spam/ham for one email")
     predict_parser.add_argument("--model", type=Path, default=Path("models/spam_model.joblib"))
@@ -89,7 +96,7 @@ def main() -> None:
 
     try:
         if args.command == "train":
-            run_train(args.data, args.model_out, args.model_type, args.compare_models)
+            run_train(args.data, args.model_out, args.model_type, args.compare_models, args.cv_folds)
         elif args.command == "predict":
             run_predict(args.model, args.text)
         elif args.command == "evaluate":
