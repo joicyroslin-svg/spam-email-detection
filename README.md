@@ -34,8 +34,11 @@ spam-email-detection/
 |  +- evaluate.py
 +- requirements.txt
 +- .gitignore
++- LICENSE
 +- README.md
++- demo.txt
 +- spam_email_detection_project.py
++- test_project.py
 ```
 
 ## Setup
@@ -68,6 +71,29 @@ py spam_email_detection_project.py explain --model models/spam_model.joblib --te
 
 ```powershell
 py spam_email_detection_project.py analyze --model models/spam_model.joblib --text "URGENT: Verify OTP now to avoid account suspension."
+```
+
+## Sample Output
+
+```text
+Prediction: spam
+Spam confidence: 0.8681
+Rule-based risk score: 65/100
+Matched risk signals:
+  - credential_theft: otp
+  - urgent_pressure: 24 hours, suspended, termination, urgent
+  - suspicious_link_language: click now
+Action: Move to spam/quarantine and avoid clicking links.
+```
+
+## Demo Cases
+
+Use `demo.txt` for quick manual checks with expected labels.
+
+## Tests
+
+```powershell
+py -m pytest test_project.py
 ```
 
 ## Future Upgrades

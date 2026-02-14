@@ -1,0 +1,16 @@
+Spam Email Detection Demo Cases
+
+1) Text: "URGENT: Verify OTP now to avoid account suspension."
+   Expected: spam
+
+2) Text: "You won a free gift card, click now to claim."
+   Expected: spam
+
+3) Text: "Reminder: Team standup moved to 10:30 AM."
+   Expected: ham
+
+4) Text: "Please review the attached design draft and share feedback."
+   Expected: ham
+
+5) Text: "Payment failed. Re-enter card details immediately."
+   Expected: spam
