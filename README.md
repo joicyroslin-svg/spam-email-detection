@@ -1,4 +1,5 @@
 # Spam Email Detection
+[![CI](https://github.com/joicyroslin-svg/spam-email-detection/actions/workflows/ci.yml/badge.svg)](https://github.com/joicyroslin-svg/spam-email-detection/actions/workflows/ci.yml)
 
 An end-to-end, GitHub-ready AI project for detecting spam emails with a practical, explainable workflow.
 
