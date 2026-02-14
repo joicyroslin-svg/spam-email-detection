@@ -26,7 +26,12 @@ spam-email-detection/
 +- data/
 |  +- sample_emails.csv
 +- models/
+|  +- .gitkeep
 |  +- spam_model.joblib
++- src/
+|  +- train.py
+|  +- predict.py
+|  +- evaluate.py
 +- requirements.txt
 +- .gitignore
 +- README.md
