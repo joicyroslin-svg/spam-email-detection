@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import argparse
 import logging
+import sys
 from pathlib import Path
+
+if __package__ is None or __package__ == "":
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from src.spam_pipeline import (
     compare_models,
@@ -27,7 +31,13 @@ def run_train(data_path: Path, model_out: Path, model_type: str, compare: bool) 
         model, _, _, metrics = train_model(data, model_type=model_type)
 
     save_model(model, model_out)
-    logger.info("Precision: %.4f | Recall: %.4f | F1-score: %.4f", metrics["precision"], metrics["recall"], metrics["f1"])
+    logger.info(
+        "Accuracy: %.4f | Precision: %.4f | Recall: %.4f | F1-score: %.4f",
+        metrics["accuracy"],
+        metrics["precision"],
+        metrics["recall"],
+        metrics["f1"],
+    )
     logger.info("Classification report:\n%s", metrics["classification_report"])
 
 

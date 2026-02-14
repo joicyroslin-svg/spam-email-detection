@@ -32,6 +32,7 @@ spam-email-detection/
     src/
     reports/
     notebooks/
+    screenshots/
     README.md
     requirements.txt
 ```
@@ -75,6 +76,15 @@ py spam_email_detection_project.py evaluate
 ## Generated Evaluation Outputs
 - `reports/evaluation.txt`
 - `reports/confusion_matrix.png`
+
+## Model Evaluation Metrics
+Training and evaluation now report the following metrics:
+- Accuracy
+- Precision
+- Recall
+- F1-score
+
+These metrics are logged in terminal output and written to `reports/evaluation.txt` after evaluation.
 
 ## Future Improvements
 - Hyperparameter optimization with cross-validation

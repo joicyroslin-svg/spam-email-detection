@@ -11,7 +11,7 @@ import pandas as pd
 import seaborn as sns
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, confusion_matrix, f1_score, precision_recall_fscore_support
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
@@ -121,8 +121,10 @@ def train_model(
     y_pred = model.predict(X_test)
 
     precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average="binary", pos_label="spam")
+    accuracy = accuracy_score(y_test, y_pred)
     metrics = {
         "model_type": model_type,
+        "accuracy": float(accuracy),
         "precision": float(precision),
         "recall": float(recall),
         "f1": float(f1),
@@ -206,6 +208,7 @@ def evaluate_model(
     """Evaluate model, save text report and confusion matrix image."""
     y_pred = model.predict(X_test)
     precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average="binary", pos_label="spam")
+    accuracy = accuracy_score(y_test, y_pred)
     cm = confusion_matrix(y_test, y_pred)
     report_text = classification_report(y_test, y_pred)
 
@@ -214,6 +217,7 @@ def evaluate_model(
 
     evaluation_txt = reports_path / "evaluation.txt"
     evaluation_body = (
+        f"Accuracy: {accuracy:.4f}\\n"
         f"Precision: {precision:.4f}\\n"
         f"Recall: {recall:.4f}\\n"
         f"F1-score: {f1:.4f}\\n\\n"
@@ -236,6 +240,7 @@ def evaluate_model(
     logger.info("Saved confusion matrix image to %s", cm_image)
 
     return {
+        "accuracy": float(accuracy),
         "precision": float(precision),
         "recall": float(recall),
         "f1": float(f1),

@@ -1,4 +1,4 @@
-Precision: 1.0000\nRecall: 1.0000\nF1-score: 1.0000\n\nClassification Report:\n              precision    recall  f1-score   support
+Accuracy: 1.0000\nPrecision: 1.0000\nRecall: 1.0000\nF1-score: 1.0000\n\nClassification Report:\n              precision    recall  f1-score   support
 
          ham       1.00      1.00      1.00         5
         spam       1.00      1.00      1.00         5
