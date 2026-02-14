@@ -2,6 +2,16 @@
 
 An end-to-end, GitHub-ready AI project for detecting spam emails with a practical, explainable workflow.
 
+## About
+
+This project uses a hybrid AI + rule-based approach to classify emails as spam or ham.
+It combines TF-IDF text features, handcrafted spam indicators, and phishing-risk signal analysis to provide:
+
+- Spam/ham prediction
+- Confidence score
+- Explainable top spam terms
+- Risk-score based safety action
+
 ## What makes this unique
 
 - Hybrid features: combines classic text TF-IDF features with handcrafted email risk signals.
@@ -11,19 +21,16 @@ An end-to-end, GitHub-ready AI project for detecting spam emails with a practica
 
 ## Project Structure
 
-```
+```text
 spam-email-detection/
 +- data/
-¦  +- sample_emails.csv
+|  +- sample_emails.csv
 +- models/
-¦  +- .gitkeep
-+- src/
-¦  +- train.py
-¦  +- predict.py
-¦  +- evaluate.py
+|  +- spam_model.joblib
 +- requirements.txt
 +- .gitignore
 +- README.md
++- spam_email_detection_project.py
 ```
 
 ## Setup
@@ -31,39 +38,31 @@ spam-email-detection/
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\activate
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 ```
 
 ## Train
 
 ```powershell
-python src/train.py --data data/sample_emails.csv --model-out models/spam_model.joblib
+py spam_email_detection_project.py train --data data/sample_emails.csv --model-out models/spam_model.joblib
 ```
-
-This will:
-- Train Logistic Regression and Linear SVM pipelines
-- Print metrics on validation split
-- Save the best model to `models/spam_model.joblib`
 
 ## Predict
 
 ```powershell
-python src/predict.py --model models/spam_model.joblib --text "Congratulations! You won a free iPhone. Click now!"
+py spam_email_detection_project.py predict --model models/spam_model.joblib --text "Congratulations! You won a free iPhone. Click now!"
 ```
 
 ## Evaluate with Explainability
 
 ```powershell
-python src/evaluate.py --model models/spam_model.joblib --text "Urgent: Your account is locked, verify immediately"
+py spam_email_detection_project.py explain --model models/spam_model.joblib --text "Urgent: Your account is locked, verify immediately"
 ```
 
-## GitHub Upload
+## Analyze with Risk Signals
 
 ```powershell
-git init
-git add .
-git commit -m "Initial commit: unique spam email detection project"
-# then connect remote and push
+py spam_email_detection_project.py analyze --model models/spam_model.joblib --text "URGENT: Verify OTP now to avoid account suspension."
 ```
 
 ## Future Upgrades
