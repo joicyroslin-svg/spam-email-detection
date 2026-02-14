@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Artifacts
+models/*.joblib
+
+# OS
+.DS_Store
+Thumbs.db
