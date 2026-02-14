@@ -5,6 +5,7 @@ __pycache__/
 
 # Artifacts
 models/*.joblib
+!models/spam_model.joblib
 
 # OS
 .DS_Store
