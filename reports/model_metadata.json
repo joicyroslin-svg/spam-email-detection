@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-02-16T18:15:58.940229+00:00",
-  "git_commit": "f133c07f15b20c4231ee33c5a890c9d8724d73ee",
+  "generated_at_utc": "2026-02-16T18:26:45.122360+00:00",
+  "git_commit": "d060039109b171a3eac2561331f1a0466f224f5e",
   "model_path": "C:\\Users\\SUNIL\\OneDrive\\Desktop\\spam-email-detection\\models\\spam_model.joblib",
-  "model_sha256": "938489cf203414e97386fe1c25313fedadd8fbdaaafb85211e13a66db27c5638",
+  "model_sha256": "c23bddf0167f72bf1e33f2ccea7704fefae56b5906cd881124798cac10ab6c79",
   "dataset_path": "C:\\Users\\SUNIL\\OneDrive\\Desktop\\spam-email-detection\\data\\sample_emails.csv",
   "dataset_sha256": "907fda94cf47dc7a268a57a19ba10fd9353782cd66f7abd9c72ce58d4f8c0053",
   "classifier": "LogisticRegression",

@@ -34,7 +34,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest test_project.py
+          pytest
 
       - name: CLI smoke test
         run: |

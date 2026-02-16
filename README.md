@@ -101,5 +101,19 @@ docker compose up --build
 ```powershell
 ruff check .
 mypy spam_email_detection_project.py src api
-pytest test_project.py
+pytest
 ```
+
+## Pre-commit Setup
+```powershell
+pre-commit install
+pre-commit run --all-files
+```
+
+## Semantic Release
+This repository uses **Release Please** to automate semantic versioning and changelog updates on `main`.
+- Workflow: `.github/workflows/release.yml`
+- Config: `release-please-config.json`
+- Manifest: `.release-please-manifest.json`
+
+Use Conventional Commit messages (for example: `feat: ...`, `fix: ...`) for clean release notes.

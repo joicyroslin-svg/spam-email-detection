@@ -1,0 +1,20 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.10
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.17.1
+    hooks:
+      - id: mypy
+        args: ["spam_email_detection_project.py", "src", "api"]
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: py -m pytest
+        language: system
+        pass_filenames: false
