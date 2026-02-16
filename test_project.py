@@ -8,6 +8,9 @@ SCRIPT = ROOT / "spam_email_detection_project.py"
 DATA = ROOT / "data" / "sample_emails.csv"
 MODEL = ROOT / "models" / "spam_model.joblib"
 REPORT = ROOT / "reports" / "evaluation.txt"
+ROC = ROOT / "reports" / "roc_curve.png"
+PR = ROOT / "reports" / "pr_curve.png"
+METADATA = ROOT / "reports" / "model_metadata.json"
 
 
 def run_cmd(args):
@@ -56,6 +59,8 @@ def test_predict_outputs_label():
 def test_evaluate_writes_report():
     run_cmd(["evaluate", "--model", str(MODEL), "--data", str(DATA)])
     assert REPORT.exists()
+    assert ROC.exists()
+    assert PR.exists()
 
 
 def test_train_with_cv_flag():
@@ -73,3 +78,21 @@ def test_train_with_cv_flag():
     )
     output = combined_output(result)
     assert "Cross-validation summary" in output
+
+
+def test_train_with_tuning_writes_metadata():
+    run_cmd(
+        [
+            "train",
+            "--data",
+            str(DATA),
+            "--model-out",
+            str(MODEL),
+            "--model-type",
+            "logistic_regression",
+            "--tune-hyperparams",
+            "--cv-folds",
+            "3",
+        ]
+    )
+    assert METADATA.exists()

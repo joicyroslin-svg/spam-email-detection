@@ -1,0 +1,24 @@
+{
+  "generated_at_utc": "2026-02-16T18:00:52.696264+00:00",
+  "model_path": "C:\\Users\\SUNIL\\OneDrive\\Desktop\\spam-email-detection\\models\\spam_model.joblib",
+  "dataset_path": "C:\\Users\\SUNIL\\OneDrive\\Desktop\\spam-email-detection\\data\\sample_emails.csv",
+  "dataset_sha256": "907fda94cf47dc7a268a57a19ba10fd9353782cd66f7abd9c72ce58d4f8c0053",
+  "classifier": "LogisticRegression",
+  "metrics": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "roc_auc": 1.0,
+    "pr_auc": 1.0,
+    "best_threshold": 0.5642320082781517
+  },
+  "best_params": {
+    "classifier__C": 0.5,
+    "vectorizer__min_df": 1,
+    "vectorizer__ngram_range": [
+      1,
+      2
+    ]
+  }
+}

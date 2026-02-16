@@ -13,16 +13,27 @@ from src.spam_pipeline import (
     load_model,
     predict_email,
     resolve_data_path,
+    save_model_metadata,
     save_model,
+    tune_hyperparameters,
     train_model,
 )
 
 logger = logging.getLogger(__name__)
 
 
-def run_train(data_path: Path, model_path: Path, model_type: str, compare: bool, cv_folds: int) -> None:
+def run_train(
+    data_path: Path,
+    model_path: Path,
+    model_type: str,
+    compare: bool,
+    cv_folds: int,
+    tune_hyperparams: bool,
+) -> None:
     """Train model(s), optionally compare, and save best model."""
-    data = load_data(resolve_data_path(data_path))
+    resolved_data = resolve_data_path(data_path)
+    data = load_data(resolved_data)
+    best_params = {}
 
     if cv_folds > 1:
         cv_summary = cross_validate_models(data, cv_folds=cv_folds)
@@ -32,11 +43,19 @@ def run_train(data_path: Path, model_path: Path, model_type: str, compare: bool,
     if compare:
         model, best_name, X_test, y_test, metrics = compare_models(data)
         logger.info("Best model selected by comparison: %s", best_name)
+        model_type = best_name
     else:
         model, X_test, y_test, metrics = train_model(data, model_type=model_type)
 
+    if tune_hyperparams:
+        tuned_model, best_params, tuned_cv_f1 = tune_hyperparameters(data, model_type=model_type, cv_folds=max(cv_folds, 3))
+        model = tuned_model
+        metrics["tuned_cv_f1"] = tuned_cv_f1
+        logger.info("Using tuned %s model with CV F1=%.4f", model_type, tuned_cv_f1)
+
     save_model(model, model_path)
     eval_metrics = evaluate_model(model, X_test, y_test, reports_dir=Path("reports"))
+    save_model_metadata(model, eval_metrics, resolved_data, model_path, reports_dir=Path("reports"), best_params=best_params)
 
     logger.info("Precision: %.4f | Recall: %.4f | F1-score: %.4f", eval_metrics["precision"], eval_metrics["recall"], eval_metrics["f1"])
     logger.info("Classification report:\n%s", metrics["classification_report"])
@@ -82,6 +101,7 @@ def main() -> None:
     )
     train_parser.add_argument("--compare-models", action="store_true", help="Compare Naive Bayes and Logistic Regression")
     train_parser.add_argument("--cv-folds", type=int, default=0, help="Optional cross-validation folds (0 disables CV)")
+    train_parser.add_argument("--tune-hyperparams", action="store_true", help="Run grid-search hyperparameter tuning on selected model")
 
     predict_parser = subparsers.add_parser("predict", help="Predict spam/ham for one email")
     predict_parser.add_argument("--model", type=Path, default=Path("models/spam_model.joblib"))
@@ -96,7 +116,7 @@ def main() -> None:
 
     try:
         if args.command == "train":
-            run_train(args.data, args.model_out, args.model_type, args.compare_models, args.cv_folds)
+            run_train(args.data, args.model_out, args.model_type, args.compare_models, args.cv_folds, args.tune_hyperparams)
         elif args.command == "predict":
             run_predict(args.model, args.text)
         elif args.command == "evaluate":

@@ -52,6 +52,7 @@ spam-email-detection/
 
 Use `--compare-models` to automatically train both and save the best one by F1-score.
 Use `--cv-folds` to run optional cross-validation before final training.
+Use `--tune-hyperparams` to run grid-search tuning on the selected model.
 
 ## Example CLI Usage
 1. Train a single model:
@@ -69,6 +70,11 @@ py spam_email_detection_project.py train --compare-models
 py spam_email_detection_project.py train --compare-models --cv-folds 5
 ```
 
+2.2. Train with hyperparameter tuning:
+```powershell
+py spam_email_detection_project.py train --model-type logistic_regression --cv-folds 3 --tune-hyperparams
+```
+
 3. Predict one email:
 ```powershell
 py spam_email_detection_project.py predict --text "URGENT: Verify your account now"
@@ -82,6 +88,9 @@ py spam_email_detection_project.py evaluate
 ## Generated Evaluation Outputs
 - `reports/evaluation.txt`
 - `reports/confusion_matrix.png`
+- `reports/roc_curve.png`
+- `reports/pr_curve.png`
+- `reports/model_metadata.json`
 - `screenshots/sample_output_real.png`
 
 ## Model Evaluation Metrics

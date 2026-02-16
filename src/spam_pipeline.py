@@ -1,18 +1,22 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
 import joblib
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, make_scorer, precision_recall_fscore_support, f1_score
-from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
+from sklearn.metrics import accuracy_score, auc, classification_report, confusion_matrix, f1_score, make_scorer, precision_recall_fscore_support, precision_recall_curve, roc_curve
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_val_score, train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 
@@ -163,6 +167,41 @@ def compare_models(
     return best_model, best_name, best_X_test, best_y_test, best_metrics
 
 
+def tune_hyperparameters(
+    data: pd.DataFrame,
+    model_type: str,
+    cv_folds: int = 3,
+    random_state: int = 42,
+) -> Tuple[Pipeline, Dict[str, Any], float]:
+    """Tune model hyperparameters with grid search and return best estimator."""
+    X = data["email"]
+    y = data["label"]
+
+    base_model = build_pipeline(model_type)
+    if model_type == "naive_bayes":
+        param_grid = {
+            "vectorizer__min_df": [1, 2],
+            "vectorizer__ngram_range": [(1, 1), (1, 2)],
+            "classifier__alpha": [0.1, 0.5, 1.0],
+        }
+    elif model_type == "logistic_regression":
+        param_grid = {
+            "vectorizer__min_df": [1, 2],
+            "vectorizer__ngram_range": [(1, 1), (1, 2)],
+            "classifier__C": [0.5, 1.0, 2.0],
+        }
+    else:
+        raise ValueError("model_type must be 'naive_bayes' or 'logistic_regression'")
+
+    cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_state)
+    search = GridSearchCV(base_model, param_grid=param_grid, scoring=make_scorer(f1_score, pos_label="spam"), cv=cv, n_jobs=None)
+    search.fit(X, y)
+
+    logger.info("Hyperparameter tuning complete for %s. Best F1=%.4f", model_type, search.best_score_)
+    logger.info("Best params: %s", search.best_params_)
+    return search.best_estimator_, dict(search.best_params_), float(search.best_score_)
+
+
 def cross_validate_models(
     data: pd.DataFrame,
     candidates: Tuple[str, ...] = ("naive_bayes", "logistic_regression"),
@@ -241,6 +280,27 @@ def evaluate_model(
     accuracy = accuracy_score(y_test, y_pred)
     cm = confusion_matrix(y_test, y_pred)
     report_text = classification_report(y_test, y_pred)
+    y_true_binary = (y_test == "spam").astype(int).to_numpy()
+
+    # Use probability when available; otherwise convert decision function to pseudo-probability.
+    clf = model.named_steps.get("classifier")
+    if hasattr(clf, "predict_proba"):
+        classes = list(clf.classes_)
+        spam_idx = classes.index("spam") if "spam" in classes else 1
+        y_score = model.predict_proba(X_test)[:, spam_idx]
+    elif hasattr(model, "decision_function"):
+        decision = model.decision_function(X_test)
+        y_score = 1.0 / (1.0 + np.exp(-decision))
+    else:
+        y_score = y_true_binary.astype(float)
+
+    pr_precision, pr_recall, pr_thresholds = precision_recall_curve(y_true_binary, y_score)
+    f1_values = 2 * pr_precision[:-1] * pr_recall[:-1] / (pr_precision[:-1] + pr_recall[:-1] + 1e-12)
+    best_idx = int(np.argmax(f1_values)) if len(f1_values) else 0
+    best_threshold = float(pr_thresholds[best_idx]) if len(pr_thresholds) else 0.5
+    roc_fpr, roc_tpr, _ = roc_curve(y_true_binary, y_score)
+    roc_auc = float(auc(roc_fpr, roc_tpr))
+    pr_auc = float(auc(pr_recall, pr_precision))
 
     reports_path = Path(reports_dir)
     reports_path.mkdir(parents=True, exist_ok=True)
@@ -251,6 +311,9 @@ def evaluate_model(
         f"Precision: {precision:.4f}\\n"
         f"Recall: {recall:.4f}\\n"
         f"F1-score: {f1:.4f}\\n\\n"
+        f"Best threshold (by PR F1): {best_threshold:.4f}\\n"
+        f"ROC-AUC: {roc_auc:.4f}\\n"
+        f"PR-AUC: {pr_auc:.4f}\\n\\n"
         f"Classification Report:\\n{report_text}\\n"
         f"Confusion Matrix:\\n{cm}\\n"
     )
@@ -266,8 +329,35 @@ def evaluate_model(
     plt.savefig(cm_image)
     plt.close()
 
+    # ROC curve visualization
+    roc_image = reports_path / "roc_curve.png"
+    plt.figure(figsize=(5, 4))
+    plt.plot(roc_fpr, roc_tpr, label=f"ROC AUC = {roc_auc:.3f}")
+    plt.plot([0, 1], [0, 1], linestyle="--")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("ROC Curve")
+    plt.legend(loc="lower right")
+    plt.tight_layout()
+    plt.savefig(roc_image)
+    plt.close()
+
+    # Precision-Recall curve visualization
+    pr_image = reports_path / "pr_curve.png"
+    plt.figure(figsize=(5, 4))
+    plt.plot(pr_recall, pr_precision, label=f"PR AUC = {pr_auc:.3f}")
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title("Precision-Recall Curve")
+    plt.legend(loc="lower left")
+    plt.tight_layout()
+    plt.savefig(pr_image)
+    plt.close()
+
     logger.info("Saved evaluation report to %s", evaluation_txt)
     logger.info("Saved confusion matrix image to %s", cm_image)
+    logger.info("Saved ROC curve image to %s", roc_image)
+    logger.info("Saved PR curve image to %s", pr_image)
 
     return {
         "accuracy": float(accuracy),
@@ -276,6 +366,52 @@ def evaluate_model(
         "f1": float(f1),
         "classification_report": report_text,
         "confusion_matrix": cm,
+        "best_threshold": best_threshold,
+        "roc_auc": roc_auc,
+        "pr_auc": pr_auc,
         "evaluation_path": evaluation_txt,
         "confusion_matrix_path": cm_image,
+        "roc_curve_path": roc_image,
+        "pr_curve_path": pr_image,
     }
+
+
+def save_model_metadata(
+    model: Pipeline,
+    metrics: Dict[str, Any],
+    data_path: Path | str,
+    model_path: Path | str,
+    reports_dir: Path | str = Path("reports"),
+    best_params: Dict[str, Any] | None = None,
+) -> Path:
+    """Save model metadata/version information to reports/model_metadata.json."""
+    reports_path = Path(reports_dir)
+    reports_path.mkdir(parents=True, exist_ok=True)
+
+    data_file = Path(data_path)
+    data_bytes = data_file.read_bytes() if data_file.exists() else b""
+    dataset_sha256 = hashlib.sha256(data_bytes).hexdigest() if data_bytes else ""
+
+    classifier = model.named_steps.get("classifier")
+    metadata = {
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "model_path": str(model_path),
+        "dataset_path": str(data_file),
+        "dataset_sha256": dataset_sha256,
+        "classifier": classifier.__class__.__name__ if classifier is not None else "unknown",
+        "metrics": {
+            "accuracy": metrics.get("accuracy"),
+            "precision": metrics.get("precision"),
+            "recall": metrics.get("recall"),
+            "f1": metrics.get("f1"),
+            "roc_auc": metrics.get("roc_auc"),
+            "pr_auc": metrics.get("pr_auc"),
+            "best_threshold": metrics.get("best_threshold"),
+        },
+        "best_params": best_params or {},
+    }
+
+    metadata_path = reports_path / "model_metadata.json"
+    metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    logger.info("Saved model metadata to %s", metadata_path)
+    return metadata_path
