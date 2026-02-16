@@ -1,0 +1,24 @@
+Global top spam terms:
+- now: 0.9513
+- free: 0.6460
+- account: 0.6316
+- your: 0.5131
+- register: 0.4804
+- claim: 0.4753
+- details: 0.4531
+- to: 0.4424
+- final: 0.3936
+- today: 0.3913
+- verify: 0.3693
+- now to: 0.3501
+- urgent: 0.3455
+- card: 0.3407
+- immediately: 0.3355
+- claim your: 0.2991
+- to avoid: 0.2689
+- avoid: 0.2689
+- to claim: 0.2545
+- confirm: 0.0893
+
+Sample text top terms:
+- No positive term contribution found

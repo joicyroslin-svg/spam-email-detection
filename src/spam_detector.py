@@ -8,8 +8,14 @@ from sklearn.pipeline import Pipeline
 
 from src.spam_pipeline import (
     evaluate_model as _evaluate_model,
+)
+from src.spam_pipeline import (
     load_data as _load_data,
+)
+from src.spam_pipeline import (
     predict_email as _predict_email,
+)
+from src.spam_pipeline import (
     train_model as _train_model,
 )
 

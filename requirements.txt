@@ -5,4 +5,8 @@ matplotlib==3.10.8
 seaborn==0.13.2
 nltk==3.9.2
 joblib==1.5.3
+fastapi==0.116.1
+uvicorn==0.35.0
+ruff==0.12.10
+mypy==1.17.1
 pytest==9.0.2

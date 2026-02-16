@@ -21,6 +21,8 @@ def run_predict(model_path: Path, text: str) -> None:
     logger.info("Prediction: %s", result["label"])
     if result["confidence"] is not None:
         logger.info("Spam confidence: %.4f", result["confidence"])
+    if result["top_terms"]:
+        logger.info("Top terms: %s", ", ".join(term for term, _ in result["top_terms"][:5]))
 
 
 def main() -> None:

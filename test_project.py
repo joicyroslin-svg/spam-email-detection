@@ -2,15 +2,18 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 SCRIPT = ROOT / "spam_email_detection_project.py"
 DATA = ROOT / "data" / "sample_emails.csv"
+BENCH = ROOT / "data" / "benchmark_emails.csv"
 MODEL = ROOT / "models" / "spam_model.joblib"
 REPORT = ROOT / "reports" / "evaluation.txt"
 ROC = ROOT / "reports" / "roc_curve.png"
 PR = ROOT / "reports" / "pr_curve.png"
 METADATA = ROOT / "reports" / "model_metadata.json"
+TUNING = ROOT / "reports" / "tuning_results.csv"
+BENCHMARK = ROOT / "reports" / "benchmark_results.csv"
+EXPLAIN = ROOT / "reports" / "explainability_report.txt"
 
 
 def run_cmd(args):
@@ -80,19 +83,27 @@ def test_train_with_cv_flag():
     assert "Cross-validation summary" in output
 
 
-def test_train_with_tuning_writes_metadata():
+def test_train_with_tuning_and_artifacts():
     run_cmd(
         [
             "train",
             "--data",
             str(DATA),
+            "--benchmark-data",
+            str(BENCH),
             "--model-out",
             str(MODEL),
             "--model-type",
             "logistic_regression",
             "--tune-hyperparams",
+            "--n-iter",
+            "4",
             "--cv-folds",
             "3",
+            "--calibrate",
         ]
     )
     assert METADATA.exists()
+    assert TUNING.exists()
+    assert BENCHMARK.exists()
+    assert EXPLAIN.exists()

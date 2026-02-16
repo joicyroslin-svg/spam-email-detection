@@ -1,6 +1,8 @@
 {
-  "generated_at_utc": "2026-02-16T18:00:52.696264+00:00",
+  "generated_at_utc": "2026-02-16T18:15:58.940229+00:00",
+  "git_commit": "f133c07f15b20c4231ee33c5a890c9d8724d73ee",
   "model_path": "C:\\Users\\SUNIL\\OneDrive\\Desktop\\spam-email-detection\\models\\spam_model.joblib",
+  "model_sha256": "938489cf203414e97386fe1c25313fedadd8fbdaaafb85211e13a66db27c5638",
   "dataset_path": "C:\\Users\\SUNIL\\OneDrive\\Desktop\\spam-email-detection\\data\\sample_emails.csv",
   "dataset_sha256": "907fda94cf47dc7a268a57a19ba10fd9353782cd66f7abd9c72ce58d4f8c0053",
   "classifier": "LogisticRegression",
@@ -11,14 +13,23 @@
     "f1": 1.0,
     "roc_auc": 1.0,
     "pr_auc": 1.0,
-    "best_threshold": 0.5642320082781517
+    "best_threshold": 0.6566777583190551
   },
   "best_params": {
-    "classifier__C": 0.5,
-    "vectorizer__min_df": 1,
     "vectorizer__ngram_range": [
       1,
       2
-    ]
+    ],
+    "vectorizer__min_df": 2,
+    "classifier__C": 1.0
+  },
+  "artifacts": {
+    "evaluation": "reports\\evaluation.txt",
+    "confusion_matrix": "reports\\confusion_matrix.png",
+    "roc_curve": "reports\\roc_curve.png",
+    "pr_curve": "reports\\pr_curve.png",
+    "explainability": "reports\\explainability_report.txt",
+    "benchmark_results": "reports\\benchmark_results.csv",
+    "tuning_results": "reports\\tuning_results.csv"
   }
 }

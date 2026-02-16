@@ -1,110 +1,105 @@
 # Spam Email Detection using Machine Learning
 
-A production-style machine learning project that classifies emails as **spam** or **ham** with reusable training, prediction, and evaluation workflows.
+A production-style machine learning project that classifies emails as **spam** or **ham** with reusable training, prediction, evaluation, benchmarking, and API workflows.
 
 ## Problem Statement
-Spam emails create security and productivity risks. This project builds a reliable classifier that can detect spam automatically and provide evaluation artifacts for model quality tracking.
+Spam emails create security and productivity risks. This project builds a reliable classifier to detect spam, expose explainability signals, and provide reproducible reporting artifacts.
 
 ## Project Architecture (Text Diagram)
 ```text
-CLI (spam_email_detection_project.py)
-        |
-        v
-src/train.py   src/predict.py   src/evaluate.py
-        \        |             /
-         \       |            /
-              src/spam_pipeline.py
-                    |
-      +-------------+----------------+
-      |                              |
- data/sample_emails.csv         models/spam_model.joblib
-                                      |
-                                      v
-                        reports/evaluation.txt
-                        reports/confusion_matrix.png
+CLI (spam_email_detection_project.py)      FastAPI (api/main.py)
+                |                                   |
+                +-------------------+---------------+
+                                    v
+                           src/spam_pipeline.py
+                                    |
+      +-----------------------------+------------------------------+
+      |                             |                              |
+ data/sample_emails.csv      data/benchmark_emails.csv     models/spam_model.joblib
+                                    |
+                                    v
+ reports/evaluation.txt, benchmark_results.csv, tuning_results.csv,
+ reports/confusion_matrix.png, roc_curve.png, pr_curve.png,
+ reports/explainability_report.txt, reports/model_metadata.json
 ```
 
 ## Repository Structure
 ```text
 spam-email-detection/
+    api/
     data/
     models/
     src/
     reports/
     notebooks/
     screenshots/
+    Dockerfile
+    docker-compose.yml
+    pyproject.toml
     README.md
     requirements.txt
 ```
 
-## Skills Demonstrated
-- Data loading and validation
-- Text preprocessing with TF-IDF pipeline
-- Model training and optional model comparison
-- Metrics reporting (precision, recall, F1-score)
-- Confusion matrix visualization
-- Error handling and structured logging
-- CLI-based reproducible ML workflow
+## Key Improvements
+- Larger benchmark dataset: `data/benchmark_emails.csv`
+- Hyperparameter tuning: `RandomizedSearchCV` with saved history in `reports/tuning_results.csv`
+- Probability calibration: `--calibrate` (CalibratedClassifierCV)
+- Threshold tuning + curves: ROC/PR curves + best threshold in `reports/evaluation.txt`
+- Explainability: global and sample term report in `reports/explainability_report.txt`
+- Versioning metadata: `reports/model_metadata.json` (dataset hash, model hash, git commit)
+- API serving: FastAPI `/predict`
+- Quality gates: `ruff` + `mypy` in CI
 
 ## Models
 - Naive Bayes (`naive_bayes`)
 - Logistic Regression (`logistic_regression`)
 
-Use `--compare-models` to automatically train both and save the best one by F1-score.
-Use `--cv-folds` to run optional cross-validation before final training.
-Use `--tune-hyperparams` to run grid-search tuning on the selected model.
-
 ## Example CLI Usage
-1. Train a single model:
+1. Train with comparison, CV, tuning, and calibration:
 ```powershell
-py spam_email_detection_project.py train --model-type logistic_regression
+py spam_email_detection_project.py train --compare-models --cv-folds 3 --tune-hyperparams --n-iter 10 --calibrate
 ```
 
-2. Compare models and save the best:
-```powershell
-py spam_email_detection_project.py train --compare-models
-```
-
-2.1. Compare models with cross-validation:
-```powershell
-py spam_email_detection_project.py train --compare-models --cv-folds 5
-```
-
-2.2. Train with hyperparameter tuning:
-```powershell
-py spam_email_detection_project.py train --model-type logistic_regression --cv-folds 3 --tune-hyperparams
-```
-
-3. Predict one email:
+2. Predict one email:
 ```powershell
 py spam_email_detection_project.py predict --text "URGENT: Verify your account now"
 ```
 
-4. Evaluate and generate reports:
+3. Evaluate and generate reports:
 ```powershell
 py spam_email_detection_project.py evaluate
 ```
 
-## Generated Evaluation Outputs
+## API Usage
+Run API locally:
+```powershell
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+```
+
+Test endpoints:
+```powershell
+curl http://localhost:8000/health
+curl -X POST http://localhost:8000/predict -H "Content-Type: application/json" -d '{"text":"Win cash now! Click link"}'
+```
+
+## Docker Usage
+```powershell
+docker compose up --build
+```
+
+## Generated Reports
 - `reports/evaluation.txt`
 - `reports/confusion_matrix.png`
 - `reports/roc_curve.png`
 - `reports/pr_curve.png`
+- `reports/tuning_results.csv`
+- `reports/benchmark_results.csv`
+- `reports/explainability_report.txt`
 - `reports/model_metadata.json`
-- `screenshots/sample_output_real.png`
 
-## Model Evaluation Metrics
-Training and evaluation now report the following metrics:
-- Accuracy
-- Precision
-- Recall
-- F1-score
-
-These metrics are logged in terminal output and written to `reports/evaluation.txt` after evaluation.
-
-## Future Improvements
-- Hyperparameter optimization with grid/random search
-- Larger and more diverse dataset
-- Experiment tracking (MLflow)
-- REST API deployment with FastAPI
-- Continuous model monitoring for drift
+## Quality Checks
+```powershell
+ruff check .
+mypy spam_email_detection_project.py src api
+pytest test_project.py
+```

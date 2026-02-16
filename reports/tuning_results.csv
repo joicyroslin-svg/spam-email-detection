@@ -1,0 +1,5 @@
+rank_test_score,mean_test_score,std_test_score,params
+1,0.7891737891737892,0.10498875084152869,"{'vectorizer__ngram_range': (1, 2), 'vectorizer__min_df': 2, 'classifier__C': 1.0}"
+2,0.7336182336182336,0.17552031167425844,"{'vectorizer__ngram_range': (1, 2), 'vectorizer__min_df': 2, 'classifier__C': 4.0}"
+3,0.7146464646464646,0.03517269766965689,"{'vectorizer__ngram_range': (1, 2), 'vectorizer__min_df': 3, 'classifier__C': 2.0}"
+4,0.7102604997341838,0.031072066339611827,"{'vectorizer__ngram_range': (1, 2), 'vectorizer__min_df': 3, 'classifier__C': 1.0}"

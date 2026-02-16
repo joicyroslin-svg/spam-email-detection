@@ -1,4 +1,4 @@
-Accuracy: 1.0000\nPrecision: 1.0000\nRecall: 1.0000\nF1-score: 1.0000\n\nBest threshold (by PR F1): 0.5642\nROC-AUC: 1.0000\nPR-AUC: 1.0000\n\nClassification Report:\n              precision    recall  f1-score   support
+Accuracy: 1.0000\nPrecision: 1.0000\nRecall: 1.0000\nF1-score: 1.0000\n\nBest threshold (by PR F1): 0.6567\nROC-AUC: 1.0000\nPR-AUC: 1.0000\n\nClassification Report:\n              precision    recall  f1-score   support
 
          ham       1.00      1.00      1.00         5
         spam       1.00      1.00      1.00         5

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.git/
+.gitignore
+.pytest_cache/
+reports/
+screenshots/
+notebooks/
+mlruns/
